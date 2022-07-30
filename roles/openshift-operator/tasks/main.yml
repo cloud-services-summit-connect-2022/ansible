@@ -1,0 +1,121 @@
+---
+
+- name: "check that operator name has been provided"
+  assert:
+    that:
+      - operator_name | default("") | length > 0
+    fail_msg: operator_name must be set.
+
+- name: "{{ operator_name }} - set up for namespace other than 'openshift-operators'"
+  when: operator_namespace is not match("openshift-operators")
+  block:
+  - name: "{{ operator_name }} - ensure namespace exists"
+    k8s:
+      state: present
+      api_version: v1
+      kind: Namespace
+      name: "{{ operator_namespace }}"
+
+  - name: "{{ operator_name }} - ensure operatorgroup exists"
+    k8s:
+      state: present
+      definition: "{{ lookup('template', 'operatorgroup.j2' ) | from_yaml }}"
+
+- name: "{{ operator_name }} - create catalogsource for use with catalog snapshot"
+  when: operator_catalogsource_setup | bool
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'catalogsource.yaml.j2' ) | from_yaml }}"
+
+- name: "{{ operator_name }} - get packagemanifest "
+  k8s_info:
+    api_version: packages.operators.coreos.com/v1
+    kind: PackageManifest
+    name: "{{ operator_packagemanifest_name }}"
+    namespace: catalogsource_namespace
+  register: r_packagemanifest
+
+- name: "{{ operator_name }} - set facts"
+  set_fact:
+    subscription_package_name: "{{ r_packagemanifest.resources[0].status.packageName }}"
+    subscription_catalog_source: "{{ r_packagemanifest.resources[0].status.catalogSource }}"
+    subscription_catalog_source_namespace: "{{ r_packagemanifest.resources[0].status.catalogSourceNamespace }}"
+
+- name: "{{ operator_name }} - determine channel if no channel specified"
+  when: subscription_channel | default("") | length == 0
+  set_fact:
+    subscription_channel: "{{ r_packagemanifest.resources[0].status.defaultChannel }}"
+
+- name: "{{ operator_name }} - print channel to be installed"
+  debug:
+    msg: "{{ operator_name }} operator channel to be installed: {{ subscription_channel }}"
+
+- name: "{{ operator_name }} - create subscription in {{ operator_namespace }}"
+  k8s:
+    state: present
+    namespace: "{{ operator_namespace }}"
+    definition: "{{ lookup('template', resource) | from_yaml }}"
+  vars:
+    resource: "subscription.j2"
+
+- name: "wait until installplan is created"
+  k8s_info:
+    api_version: operators.coreos.com/v1alpha1
+    kind: InstallPlan
+    namespace: "{{ operator_namespace }}"
+  register: r_install_plan
+  retries: 30
+  delay: 5
+  until:
+    - r_install_plan.resources | length > 0
+    - r_install_plan.resources | to_json | from_json | json_query(query) | length > 0
+  vars:
+    query: >-
+      [?starts_with(spec.clusterServiceVersionNames[0], '{{ csv_prefix }}')].metadata.name
+
+- name: "manually approve installplan"
+  when: not automatic_installplan_approval
+  block:
+    - name: "set installplan name"
+      set_fact:
+        install_plan: >-
+          {{ r_install_plan.resources | to_json | from_json | json_query(query) }}
+      vars:
+        query: >-
+          [?starts_with(spec.clusterServiceVersionNames[0], '{{ csv_prefix }}')].metadata.name|[0]
+
+    - name: "approve installplan"
+      k8s:
+        state: present
+        namespace: "{{ operator_namespace }}"
+        definition: "{{ lookup( 'template', resource ) }}"
+      vars:
+        resource: "installplan.j2"
+        install_plan_name: "{{ install_plan }}"
+
+- name: "get installed csv"
+  k8s_info:
+    api_version: operators.coreos.com/v1alpha1
+    kind: Subscription
+    name: "{{ subscription_name }}"
+    namespace: "{{ operator_namespace }}"
+  register: r_subscription
+  retries: 30
+  delay: 5
+  until:
+    - r_subscription.resources[0].status.currentCSV is defined
+    - r_subscription.resources[0].status.currentCSV | length > 0
+
+- name: "wait until csv is installed"
+  k8s_info:
+    api_version: operators.coreos.com/v1alpha1
+    kind: ClusterServiceVersion
+    name: "{{ r_subscription.resources[0].status.currentCSV }}"
+    namespace: "{{ operator_namespace }}"
+  register: r_csv
+  retries: 15
+  delay: 5
+  until:
+    - r_csv.resources[0].status.phase is defined
+    - r_csv.resources[0].status.phase | length > 0
+    - r_csv.resources[0].status.phase == "Succeeded"

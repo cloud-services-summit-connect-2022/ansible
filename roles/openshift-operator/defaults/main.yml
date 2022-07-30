@@ -1,0 +1,15 @@
+---
+
+operator_name: ""
+
+operator_packagemanifest_name: "{{ operator_name }}"
+
+operator_namespace: openshift-operators
+
+operator_manage_namespaces: []
+
+operator_catalogsource_setup: false
+
+operator_catalogsource_name: "{{ install_operator_name }}-catalogsource"
+
+operator_catalogsource_namespace: "{{ operator_namespace }}"

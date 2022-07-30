@@ -1,0 +1,13 @@
+---
+
+- name: "deploy gitops operator in {{ gitops_operator_namespace }}"
+  include_role:
+    name: openshift-operator
+  vars:
+    operator_name: "{{ gitops_operator_name }}"
+    operator_namespace: "{{ gitops_operator_namespace }}"
+    subscription_channel: "{{ gitops_operator_subscription_channel }}"
+    subscription_name: "{{ gitops_operator_subscription_name }}"
+    automatic_installplan_approval: "{{ gitops_operator_subscription_automatic_installplan_approval }}"
+    subscription_starting_csv: "{{ gitops_operator_subscription_starting_csv }}"
+    csv_prefix: "{{ gitops_operator_csv_prefix }}"
