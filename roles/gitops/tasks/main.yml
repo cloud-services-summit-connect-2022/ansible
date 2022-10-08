@@ -1,0 +1,35 @@
+---
+
+- name: create usernames
+  set_fact:
+    _users: "{{ _users | default([]) + [user_prefix+item | string] }}"
+  loop: "{{ range(1,((num_users | int) + 1)) | list }}"
+
+- debug:
+    var: _users
+
+- name: "create {{ num_users }} user namespaces"
+  k8s:
+    state: present
+    resource_definition: "{{ lookup('template', 'user-namespace.yaml.j2') }}"
+  vars:
+    __namespaces:
+      - "{{ application_namespace_prefix }}user"
+  retries: 10
+  delay: 30
+
+- name: give {{ num_users }} users access to projects
+  k8s:
+    state: present
+    resource_definition: "{{ lookup('template', 'user-rolebinding.yaml.j2') }}"
+  vars:
+    bindings:
+      - namespace: "{{ application_namespace_prefix }}user"
+        role: "admin"
+  retries: 10
+  delay: 30
+
+- name: create applicationset
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'applicationset.yaml.j2' ) | from_yaml }}"

@@ -15,3 +15,7 @@
   loop:
     - service-binding-clusterrole.yaml.j2
     - service-binding-clusterrolebinding.yaml.j2
+
+- name: "install applicationset"
+  include_role:
+    name: gitops

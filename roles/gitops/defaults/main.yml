@@ -1,0 +1,6 @@
+---
+
+applicationset_name: globex-app-services
+applicationset_namespace: openshift-gitops
+
+application_name: globex-app-services
