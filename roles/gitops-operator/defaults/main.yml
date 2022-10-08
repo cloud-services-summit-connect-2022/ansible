@@ -1,10 +1,12 @@
 ---
 
 gitops_operator_name: openshift-gitops-operator
-gitops_operator_namespace: openshift-gitops
-gitops_operator_subscription_channel: latest
+gitops_operator_namespace: openshift-operators
+gitops_operator_subscription_channel: stable
 gitops_operator_subscription_name: "{{ gitops_operator_name }}"
 gitops_operator_subscription_automatic_installplan_approval: True
 gitops_operator_subscription_starting_csv: ""
 gitops_operator_csv_prefix: "{{ gitops_operator_name }}"
 gitops_operator_deployment_name: "{{ gitops_operator_name }}"
+
+openshift_gitops_namespace: openshift-gitops

@@ -11,3 +11,8 @@
     automatic_installplan_approval: "{{ gitops_operator_subscription_automatic_installplan_approval }}"
     subscription_starting_csv: "{{ gitops_operator_subscription_starting_csv }}"
     csv_prefix: "{{ gitops_operator_csv_prefix }}"
+
+- name: grant cluster-admin permissions to Gitops Service account
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'clusterrolebinding.yaml.j2' ) | from_yaml }}"
