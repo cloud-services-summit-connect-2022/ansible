@@ -3,3 +3,15 @@
 - name: "install gitops operator"
   include_role:
     name: gitops-operator
+
+- name: "install app services operators"
+  include_role:
+    name: app-services-operators
+
+- name: create clusterrole and clusterrolebinding for service-binding (https://github.com/redhat-developer/service-binding-operator/issues/1172)
+  k8s:
+    state: present
+    definition: "{{ lookup('template', item ) | from_yaml }}"
+  loop:
+    - service-binding-clusterrole.yaml.j2
+    - service-binding-clusterrolebinding.yaml.j2

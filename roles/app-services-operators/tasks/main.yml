@@ -1,0 +1,25 @@
+---
+
+- name: install RHOAS operator
+  include_role:
+    name: openshift-operator
+  vars:
+    operator_name: "{{ rhoas_operator_name }}"
+    operator_namespace: "{{ rhoas_operator_namespace }}"
+    subscription_channel: "{{ rhoas_operator_subscription_channel }}"
+    subscription_name: "{{ rhoas_operator_subscription_name }}"
+    automatic_installplan_approval: "{{ rhoas_operator_subscription_automatic_installplan_approval }}"
+    subscription_starting_csv: "{{ rhoas_operator_subscription_starting_csv }}"
+    csv_prefix: "{{ rhoas_operator_csv_prefix }}"
+
+- name: install Service Binding operator
+  include_role:
+    name: openshift-operator
+  vars:
+    operator_name: "{{ service_binding_operator_name }}"
+    operator_namespace: "{{ service_binding_operator_namespace }}"
+    subscription_channel: "{{ service_binding_operator_subscription_channel }}"
+    subscription_name: "{{ service_binding_operator_subscription_name }}"
+    automatic_installplan_approval: "{{ service_binding_operator_subscription_automatic_installplan_approval }}"
+    subscription_starting_csv: "{{ service_binding_operator_subscription_starting_csv }}"
+    csv_prefix: "{{ service_binding_operator_csv_prefix }}"

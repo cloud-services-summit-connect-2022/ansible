@@ -1,0 +1,19 @@
+---
+
+rhoas_operator_name: rhoas-operator
+rhoas_operator_namespace: openshift-operators
+rhoas_operator_subscription_channel: beta
+rhoas_operator_subscription_name: "{{ rhoas_operator_name }}"
+rhoas_operator_subscription_automatic_installplan_approval: true
+rhoas_operator_subscription_starting_csv: ""
+rhoas_operator_csv_prefix: rhoas-operator
+rhoas_operator_deployment_name: "{{ rhoas_operator_name }}"
+
+service_binding_operator_name: rh-service-binding-operator
+service_binding_operator_namespace: openshift-operators
+service_binding_operator_subscription_channel: stable
+service_binding_operator_subscription_name: "{{ service_binding_operator_name }}"
+service_binding_operator_subscription_automatic_installplan_approval: true
+service_binding_operator_subscription_starting_csv: ""
+service_binding_operator_csv_prefix: service-binding-operator
+service_binding_operator_deployment_name: service-binding-operator
